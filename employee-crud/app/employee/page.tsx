@@ -1,125 +1,130 @@
 "use client";
 
-import { employeeService } from "@/employee/api/employee.api";
-import type { Employee } from "@/employee/dto/Employee";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import useEmployee from "@/employee/hooks/useEmployee";
+import Link from "next/link";
 
 export default function Employee() {
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const { employees, loading, error } = useEmployee();
 
-    useEffect(() => {
-        const fetchAllEmployee = async () => {
-            try {
-                const employees = await employeeService.getAllEmployee();
-                setEmployees(employees);
-            } catch (error) {
-                console.log(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        const timer = setTimeout(() => fetchAllEmployee(), 500);
-        return () => clearTimeout(timer);
-    }, []);
+    // 1. Handle Loading State
+    if (loading) {
+        return (
+            <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+                <span className="animate-pulse">
+                    Loading employee records...
+                </span>
+            </div>
+        );
+    }
+
+    // 2. Handle Error State
+    if (error) {
+        return (
+            <div className="flex h-64 items-center justify-center text-sm text-destructive font-medium">
+                Error: {error || "Failed to load employee data."}
+            </div>
+        );
+    }
+
     return (
-        <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6 border-b pb-3">
-                Employee Page
-            </h1>
+        // 3. Perfect Block Centering via mx-auto + w-full
+        <div className="w-full max-w-5xl mx-auto my-6 px-4">
+            <Link
+                href={"employee/employee-form"}
+                className="mb-6 bg-indigo-700 px-5 py-3 hover:bg-white text-white hover:text-indigo-800 hover:border-2 cursor-pointer rounded-2xl"
+            >
+                Add Employee
+            </Link>
 
-            {loading ? (
-                <div className="flex flex-col items-center justify-center gap-3">
-                    {/* Tailwind Spinning SVG Icon */}
-                    <svg
-                        className="animate-spin h-8 w-8 text-blue-600"
-                        xmlns="http://w3.org"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                    >
-                        <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                        ></circle>
-                        <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                    </svg>
-                    <span className="text-sm font-medium text-gray-500">
-                        Loading employees...
-                    </span>
-                </div>
-            ) : (
-                <div className="overflow-x-auto shadow-md rounded-lg border border-gray-200">
-                    <table className="w-full text-left border-collapse bg-white">
-                        <thead className="bg-gray-100 text-gray-700 uppercase text-xs font-semibold tracking-wider">
-                            <tr>
-                                <th className="px-6 py-4">ID</th>
-                                <th className="px-6 py-4">First Name</th>
-                                <th className="px-6 py-4">Last Name</th>
-                                <th className="px-6 py-4">Email</th>
-                                <th className="px-6 py-4">Salary</th>
-                                <th className="px-6 py-4 text-center">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 text-gray-600 text-sm">
-                            {employees && employees.length > 0 ? (
-                                employees.map((emp) => (
-                                    <tr
-                                        key={emp.id}
-                                        className="hover:bg-gray-50 transition-colors"
-                                    >
-                                        {/* Missing ID cell added to match your column header */}
-                                        <td className="px-6 py-4 font-medium text-gray-900">
-                                            {emp.id}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {emp.firstName}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {emp.lastName}
-                                        </td>
-                                        <td className="px-6 py-4 font-mono text-xs">
-                                            {emp.email}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            $
-                                            {Number(
-                                                emp.salary,
-                                            ).toLocaleString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-center flex justify-center gap-2">
-                                            <button className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition shadow-sm">
+            {/* 4. Elegant Card wrapper for the table */}
+            <div className="mt-6 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
+                <Table className="border border-gray-300 p-8">
+                    <TableHeader>
+                        <TableRow className="bg-muted/50">
+                            <TableHead className="w-[80px] font-bold">
+                                Id
+                            </TableHead>
+                            <TableHead className="font-bold">
+                                First Name
+                            </TableHead>
+                            <TableHead className="font-bold">
+                                Last Name
+                            </TableHead>
+                            <TableHead className="font-bold">Email</TableHead>
+                            <TableHead className="font-bold">Salary</TableHead>
+                            <TableHead className="font-bold text-right pr-6">
+                                Action
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {employees && employees.length > 0 ? (
+                            employees.map((emp) => (
+                                <TableRow
+                                    key={emp.id}
+                                    className="hover:bg-muted/40 transition-colors"
+                                >
+                                    <TableCell className="font-medium">
+                                        #{emp.id}
+                                    </TableCell>
+                                    <TableCell>{emp.firstName}</TableCell>
+                                    <TableCell>{emp.lastName}</TableCell>
+                                    <TableCell className="max-w-[200px] truncate">
+                                        {emp.email}
+                                    </TableCell>
+                                    <TableCell>
+                                        {/* Nicely formatted currency */}
+                                        {new Intl.NumberFormat("en-US", {
+                                            style: "currency",
+                                            currency: "USD",
+                                            maximumFractionDigits: 0,
+                                        }).format(emp.salary)}
+                                    </TableCell>
+                                    <TableCell className="text-right pr-6">
+                                        {/* 5. Clean Button Layout utilizing native variants */}
+                                        <div className="flex justify-end items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 px-3 bg-blue-500 hover:bg-indigo-200 text-white hover:text-black transition-colors ease-in-out cursor-pointer"
+                                            >
                                                 Update
-                                            </button>
-                                            <button className="px-3 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition shadow-sm">
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                className="h-8 px-3 bg-red-500 hover:bg-indigo-200 text-white hover:text-red-500
+                                                 transition-colors ease-in-out cursor-pointer"
+                                            >
                                                 Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td
-                                        colSpan={6}
-                                        className="px-6 py-10 text-center text-gray-400 italic"
-                                    >
-                                        No employees found.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            // 6. Handle Empty State seamlessly
+                            <TableRow>
+                                <TableCell
+                                    colSpan={6}
+                                    className="h-32 text-center text-muted-foreground"
+                                >
+                                    No employee records found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
         </div>
     );
 }

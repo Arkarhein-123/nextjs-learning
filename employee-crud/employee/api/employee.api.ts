@@ -7,4 +7,10 @@ export const employeeService = {
         const response = await axios.get(BACKEND_URL);
         return response.data;
     },
+    createEmployee: async (
+        employee: Omit<Employee, "id">,
+    ): Promise<Employee> => {
+        const response = await axios.post(BACKEND_URL, employee);
+        return response.data;
+    },
 };
