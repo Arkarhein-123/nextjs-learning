@@ -4,16 +4,24 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Employee } from "@/employee/dto/Employee";
-import useCreateEmployee from "@/employee/hooks/useCreateEmployee";
+import useUpdateEmployee from "@/employee/hooks/useUpdateEmployee";
+import { employeeService } from "@/employee/api/employee.api";
 import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
 
-export default function EmployeeForm() {
-    const { createEmployee, loading, error, success } = useCreateEmployee();
+interface PageProps {
+    params: Promise<{ id: string }>;
+}
+
+export default function EmployeeEditForm({ params }: PageProps) {
+    const { id } = React.use(params); // Unwraps the dynamic parameter safely
     const router = useRouter();
+    const { updateEmployee, loading, error, success } = useUpdateEmployee();
 
     const {
         register,
         handleSubmit,
+        reset,
         formState: { errors },
     } = useForm<Employee>({
         defaultValues: {
@@ -24,37 +32,52 @@ export default function EmployeeForm() {
         },
     });
 
-    // This function runs when the form validates successfully
+    // Load data and filter purely on client side
+    useEffect(() => {
+        if (!id) return;
+
+        const fetchAndFilterEmployee = async () => {
+            try {
+                const allEmployees = await employeeService.getAllEmployee();
+                const currentEmployee = allEmployees.find(
+                    (emp) => emp.id === Number(id),
+                );
+
+                if (currentEmployee) {
+                    reset(currentEmployee);
+                } else {
+                    console.error("Employee not found in the list.");
+                }
+            } catch (err) {
+                console.error("Failed to load employee data", err);
+            }
+        };
+
+        fetchAndFilterEmployee();
+    }, [id, reset]);
+
+    useEffect(() => {
+        if (success) {
+            router.push("/employee");
+        }
+    }, [success, router]);
+
     const onSubmit = async (data: Employee) => {
-        // Destructure to remove 'id' so we send Omit<Employee, "id"> to the server
-        const { id, ...employeeData } = data;
-
-        await createEmployee(employeeData);
-
-        // Redirect back to the main employee list page after success
-        router.push("/employee");
+        const { id: _, ...employeeData } = data;
+        await updateEmployee(Number(id), employeeData);
     };
 
     return (
         <div className="w-full max-w-6xl mx-auto flex flex-col mt-5 px-4">
-            <h1 className="text-2xl font-bold mb-6">Employee Form</h1>
+            <h1 className="text-2xl font-bold mb-6">Edit Employee Form</h1>
 
-            {/* Show error alerts from backend if they happen */}
             {error && (
                 <div className="p-3 mb-4 text-sm text-red-500 bg-red-50 rounded-lg">
                     {error}
                 </div>
             )}
 
-            {/* Show success message */}
-            {success && (
-                <div className="p-3 mb-4 text-sm text-green-500 bg-green-50 rounded-lg">
-                    Employee added successfully! Redirecting...
-                </div>
-            )}
-
             <form onSubmit={handleSubmit(onSubmit)}>
-                {/* First Name */}
                 <div className="mb-3">
                     <label
                         htmlFor="firstName"
@@ -75,7 +98,6 @@ export default function EmployeeForm() {
                     )}
                 </div>
 
-                {/* Last Name */}
                 <div className="mb-3">
                     <label
                         htmlFor="lastName"
@@ -96,7 +118,6 @@ export default function EmployeeForm() {
                     )}
                 </div>
 
-                {/* Email */}
                 <div className="mb-3">
                     <label
                         htmlFor="email"
@@ -118,7 +139,6 @@ export default function EmployeeForm() {
                     )}
                 </div>
 
-                {/* Salary */}
                 <div className="mb-3">
                     <label
                         htmlFor="salary"
@@ -144,10 +164,10 @@ export default function EmployeeForm() {
                 <Button
                     type="submit"
                     disabled={loading}
-                    size="lg" // 👈 This gives you a nice, large clean button automatically!
+                    size="lg"
                     className="bg-blue-500 hover:bg-indigo-200 text-white hover:text-black transition-colors ease-in-out cursor-pointer mt-2 w-2xl mx-auto block text-center rounded-md"
                 >
-                    {loading ? "Adding..." : "Add"}
+                    {loading ? "Updating..." : "Update"}
                 </Button>
             </form>
         </div>

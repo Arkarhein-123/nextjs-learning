@@ -34,7 +34,7 @@ export default function useEmployee() {
 
         const timerId = window.setTimeout(() => {
             fetchEmployees();
-        }, 1500);
+        }, 500);
 
         return () => {
             isMounted = false;

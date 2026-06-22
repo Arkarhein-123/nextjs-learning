@@ -9,11 +9,22 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import useDeleteEmployee from "@/employee/hooks/useDeleteEmployee";
 import useEmployee from "@/employee/hooks/useEmployee";
 import Link from "next/link";
 
 export default function Employee() {
     const { employees, loading, error } = useEmployee();
+    const { deleteEmployee } = useDeleteEmployee();
+
+    const handleDelete = async (id: number) => {
+        if (window.confirm("Are you sure to delete this?")) {
+            await deleteEmployee(id);
+            window.location.reload();
+        } else {
+            console.log(`${id} doesn't exist...`);
+        }
+    };
 
     // 1. Handle Loading State
     if (loading) {
@@ -92,14 +103,16 @@ export default function Employee() {
                                     <TableCell className="text-right pr-6">
                                         {/* 5. Clean Button Layout utilizing native variants */}
                                         <div className="flex justify-end items-center gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 px-3 bg-blue-500 hover:bg-indigo-200 text-white hover:text-black transition-colors ease-in-out cursor-pointer"
+                                            <Link
+                                                href={`/employee/${emp.id}`} // 👈 Navigates dynamically to the edit path
+                                                className="h-8 px-3 inline-flex items-center justify-center text-xs font-medium rounded-md bg-blue-500 hover:bg-indigo-200 text-white hover:text-black transition-colors ease-in-out cursor-pointer shadow-sm"
                                             >
                                                 Update
-                                            </Button>
+                                            </Link>
                                             <Button
+                                                onClick={() =>
+                                                    handleDelete(emp.id)
+                                                }
                                                 variant="destructive"
                                                 size="sm"
                                                 className="h-8 px-3 bg-red-500 hover:bg-indigo-200 text-white hover:text-red-500
