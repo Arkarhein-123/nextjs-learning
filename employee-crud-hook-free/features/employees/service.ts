@@ -39,6 +39,7 @@ export const updateEmployee = async (id: number, data: Partial<Employee>): Promi
     return response.json();
 };
 
+
 export const deleteEmployee = async (id: number): Promise<void> => {
     const response = await fetch(`${EMPLOYEE_URL}/${id}`, {
         method: "DELETE",
